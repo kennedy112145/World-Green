@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title> WORLD GREEN - Desafio do Consumo</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #222;
+    overflow: hidden;
+  }
+
+  #game-container {
+    background: white;
+    width: 100%;
+    max-width: 600px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    padding: 30px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  #game-container.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  h1 {
+    margin-bottom: 10px;
+    color: #00796b;
+    font-weight: 700;
+    font-size: 2.2rem;
+    letter-spacing: 1.2px;
+  }
+
+  #scoreboard {
+    font-weight: 700;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    color: #004d40;
+    min-height: 24px;
+    transition: color 0.3s ease;
+  }
+
+  #question {
+    font-size: 1.3rem;
+    margin-bottom: 25px;
+    min-height: 80px;
+    line-height: 1.4;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  button.option-btn {
+    background: #00796b;
+    border: none;
+    color: white;
+    padding: 15px 20px;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,121,107,0.3);
+    transition: background-color 0.4s ease, transform 0.2s ease;
+  }
+
+  button.option-btn:hover:not(:disabled) {
+    background: #004d40;
+    transform: scale(1.05);
+  }
+
+  button.option-btn:disabled {
+    cursor: not-allowed;
+    background: #999;
+    box-shadow: none;
+  }
+
+  button.option-btn.correct {
+    background: #4caf50 !important;
+    box-shadow: 0 4px 12px rgba(76,175,80,0.7);
+  }
+
+  button.option-btn.wrong {
+    background: #e53935 !important;
+    box-shadow: 0 4px 12px rgba(229,57,53,0.7);
+  }
+
+  #decision-section {
+    margin-top: 30px;
+    display: none;
+    text-align: left;
+  }
+
+  #decision-section h2 {
+    color: #00796b;
+    margin-bottom: 15px;
+    font-weight: 700;
+    font-size: 1.5rem;
+  }
+
+  .decision-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  button.decision-btn {
+    background: #0288d1;
+    border: none;
+    color: white;
+    padding: 14px 18px;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(2,136,209,0.4);
+    transition: background-color 0.4s ease, transform 0.2s ease;
+  }
+
+  button.decision-btn:hover:not(:disabled) {
+    background: #01579b;
+    transform: scale(1.05);
+  }
+
+  button.decision-btn:disabled {
+    background: #999 !important;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none !important;
+  }
+
+  #message {
+    margin-top: 25px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    min-height: 40px;
+    color: #004d40;
+    transition: opacity 0.4s ease;
+  }
+
+  #progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 6px;
+    background: #00796b;
+    width: 0%;
+    transition: width 0.4s ease;
+    border-radius: 0 0 12px 12px;
+  }
+  /* Tela inicial */
+  #start-screen {
+    position: absolute;
+    inset: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    opacity: 1;
+    transition: opacity 0.6s ease;
+  }
+
+  #start-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #start-screen h1 {
+    font-size: 2.8rem;
+    color: #00796b;
+    margin-bottom: 40px;
+    font-weight: 900;
+    letter-spacing: 2px;
+  }
+
+  #start-screen button {
+    background: #00796b;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    padding: 18px 60px;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 6px 15px rgba(0,121,107,0.5);
+    transition: background-color 0.4s ease, transform 0.3s ease;
+  }
+
+  #start-screen button:hover {
+    background: #004d40;
+    transform: scale(1.1);
+  }
+
+  #message.fade-out {
+    opacity: 0;
+  }
+
+  @media (max-width: 480px) {
+    #game-container {
+      padding: 20px 25px;
+    }
+
+    button.option-btn, button.decision-btn {
+      font-size: 1rem;
+      padding: 12px 15px;
+    }
+
+    #start-screen h1 {
+      font-size: 2rem;
+      margin-bottom: 30px;
+    }
+
+    #start-screen button {
+      font-size: 1.2rem;
+      padding: 14px 40px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div id="game-container" role="main" aria-live="polite" aria-atomic="true" tabindex="0">
+    <h1>WORLD GREEN</h1>
+    <div id="scoreboard">Pontos: 0 | Recursos: R$ 50.000</div>
+    <div id="question"></div>
+    <div class="options" id="options-container"></div>
+
+    <div id="decision-section" aria-label="Decisões estratégicas">
+      <h2>Decisão Estratégica</h2>
+      <p>Você tem <span id="resources-display">R$ 50.000</span> e <span id="points-display">0 pontos</span>. O que deseja fazer?</p>
+      <div class="decision-options" id="decision-options-container"></div>
+    </div>
+
+    <div id="message" aria-live="assertive"></div>
+    <div id="progress-bar"></div>
+  </div>
+
+  <div id="start-screen" role="dialog" aria-modal="true" aria-labelledby="start-title">
+    <h1 id="start-title">WORLD GREEN</h1>
+    <button id="start-button" aria-label="Iniciar o jogo">Jogar</button>
+  </div>
+
+<script>
+  (() => {
+    const questions = [
+      {
+        question: "Qual é a principal vantagem de instalar lâmpadas LED em prédios públicos?",
+        options: [
+          { text: "Custo inicial baixo", correct: false },
+          { text: "Consumo de energia reduzido", correct: true },
+          { text: "Maior emissão de calor", correct: false },
+          { text: "Durabilidade menor", correct: false }
+        ]
+      },
+      {
+        question: "Qual prática ajuda a reduzir o desperdício de água em residências?",
+        options: [
+          { text: "Deixar a torneira aberta enquanto escova os dentes", correct: false },
+          { text: "Reutilizar água da chuva para jardinagem", correct: true },
+          { text: "Usar mangueira para limpar calçadas", correct: false },
+          { text: "Tomar banhos mais longos", correct: false }
+        ]
+      },
+      {
+        question: "Qual dessas ações pode ajudar a reduzir o consumo de energia na cidade?",
+        options: [
+          { text: "Deixar aparelhos eletrônicos ligados o tempo todo", correct: false },
+          { text: "Incentivar o uso de painéis solares", correct: true },
+          { text: "Aumentar o uso de ar-condicionado sem controle", correct: false },
+          { text: "Iluminar ruas durante o dia", correct: false }
+        ]
+      },
+      {
+        question: "Qual é a melhor forma de economizar água ao lavar roupas?",
+        options: [
+          { text: "Lavar pequenas quantidades várias vezes", correct: false },
+          { text: "Usar a máquina de lavar com carga cheia", correct: true },
+          { text: "Deixar a torneira aberta durante a lavagem", correct: false },
+          { text: "Lavar roupas manualmente com muita água", correct: false }
+        ]
+      },
+      {
+        question: "Qual fonte de energia é considerada renovável e limpa?",
+        options: [
+          { text: "Carvão mineral", correct: false },
+          { text: "Petróleo", correct: false },
+          { text: "Energia solar", correct: true },
+          { text: "Gás natural", correct: false }
+        ]
+      },
+      {
+        question: "Qual é o impacto do desperdício de água na cidade?",
+        options: [
+          { text: "Aumento da conta de água e escassez", correct: true },
+          { text: "Melhora na qualidade da água", correct: false },
+          { text: "Redução do consumo de energia", correct: false },
+          { text: "Mais água disponível para todos", correct: false }
+        ]
+      },
+      {
+        question: "Qual é a melhor forma de reduzir o consumo de energia em iluminação pública?",
+        options: [
+          { text: "Manter todas as luzes acesas 24h", correct: false },
+          { text: "Usar sensores de presença e lâmpadas LED", correct: true },
+          { text: "Usar lâmpadas incandescentes", correct: false },
+          { text: "Iluminar áreas desnecessárias", correct: false }
+        ]
+      },
+      {
+        question: "Qual é a vantagem de tarifas progressivas para consumo de água e luz?",
+        options: [
+          { text: "Incentiva o consumo excessivo", correct: false },
+          { text: "Desestimula o desperdício", correct: true },
+          { text: "Não tem efeito no consumo", correct: false },
+          { text: "Aumenta a poluição", correct: false }
+        ]
+      },
+      {
+        question: "Qual tecnologia pode ajudar a monitorar o consumo de água em tempo real?",
+        options: [
+          { text: "Medidores inteligentes (smart meters)", correct: true },
+          { text: "Lâmpadas LED", correct: false },
+          { text: "Painéis solares", correct: false },
+          { text: "Torres de resfriamento", correct: false }
+        ]
+      },
+      {
+        question: "Qual é a melhor prática para reduzir o consumo de água em jardins públicos?",
+        options: [
+          { text: "Irrigar durante o dia, no sol forte", correct: false },
+          { text: "Usar sistemas de irrigação por gotejamento", correct: true },
+          { text: "Usar mangueiras abertas por horas", correct: false },
+          { text: "Não regar as plantas nunca", correct: false }
+        ]
+      },
+      {
+        question: "Qual é o principal benefício da energia eólica?",
+        options: [
+          { text: "Emite gases poluentes", correct: false },
+          { text: "É renovável e limpa", correct: true },
+          { text: "Depende de combustíveis fósseis", correct: false },
+          { text: "É cara e ineficiente", correct: false }
+        ]
+      },
+      {
+        question: "Qual é a melhor forma de incentivar a população a economizar água?",
+        options: [
+          { text: "Campanhas educativas e incentivos", correct: true },
+          { text: "Multar sem aviso prévio", correct: false },
+          { text: "Ignorar o problema", correct: false },
+          { text: "Aumentar o preço sem justificativa", correct: false }
+        ]
+      }
+    ];
+    const allDecisions = [
+      {
+        id: 1,
+        text: "Investir em captação de água da chuva (custa R$ 50.000)",
+        cost: 50000,
+        effect: () => {
+          message("Sistema de captação de água da chuva instalado! Redução do consumo de água em 15%.");
+          resources -= 50000;
+          points += 15;
+          updateScoreboard();
+        }
+      },
+      {
+        id: 2,
+        text: "Criar campanha educativa para reduzir consumo de energia (custa R$ 30.000)",
+        cost: 30000,
+        effect: () => {
+          message("Campanha educativa lançada! Redução do consumo de energia em 10%.");
+          resources -= 30000;
+          points += 10;
+          updateScoreboard();
+        }
+      },
+      {
+        id: 3,
+        text: "Construir usina solar (custa R$ 100.000)",
+        cost: 100000,
+        effect: () => {
+          message("Usina solar construída! Redução do consumo de energia em 30%.");
+          resources -= 100000;
+          points += 30;
+          updateScoreboard();
+        }
+      },
+      {
+        id: 4,
+        text: "Implementar tarifas progressivas para consumo de água e luz (custa R$ 40.000)",
+        cost: 40000,
+        effect: () => {
+          message("Tarifas progressivas implementadas! Incentivo à redução do consumo.");
+          resources -= 40000;
+          points += 12;
+          updateScoreboard();
+        }
+      },
+      {
+        id: 5,
+        text: "Melhorar a manutenção da rede de água para evitar vazamentos (custa R$ 60.000)",
+        cost: 60000,
+        effect: () => {
+          message("Rede de água melhorada! Vazamentos reduzidos e economia garantida.");
+          resources -= 60000;
+          points += 18;
+          updateScoreboard();
+        }
+      },
+      {
+        id: 6,
+        text: "Instalar sensores de presença em prédios públicos (custa R$ 45.000)",
+        cost: 45000,
+        effect: () => {
+          message("Sensores instalados! Economia significativa de energia em iluminação.");
+          resources -= 45000;
+          points += 14;
+          updateScoreboard();
+        }
+      },
+      {
+        id: 7,
+        text: "Incentivar uso de eletrodomésticos eficientes com subsídios (custa R$ 35.000)",
+        cost: 35000,
+        effect: () => {
+          message("Subsídios concedidos! População adotando aparelhos mais eficientes.");
+          resources -= 35000;
+          points += 11;
+          updateScoreboard();
+        }
+      },
+      {
+        id: 8,
+        text: "Não investir nada",
+        cost: 0,
+        effect: () => {
+          message("Nenhum investimento realizado. A cidade mantém o consumo atual.");
+        }
+      }
+    ];
+
+    let chosenDecisionIds = new Set();
+    const decisionIntervals = [2, 3, 5];
+    let decisionIntervalIndex = 0;
+
+    let currentQuestionIndex = 0;
+    let points = 0;
+    let resources = 50000;
+    let inDecisionPhase = false;
+
+    const questionEl = document.getElementById("question");
+    const optionsContainer = document.getElementById("options-container");
+    const scoreboard = document.getElementById("scoreboard");
+    const messageEl = document.getElementById("message");
+    const decisionSection = document.getElementById("decision-section");
+    const decisionOptionsContainer = document.getElementById("decision-options-container");
+    const resourcesDisplay = document.getElementById("resources-display");
+    const pointsDisplay = document.getElementById("points-display");
+    const progressBar = document.getElementById("progress-bar");
+    const gameContainer = document.getElementById("game-container");
+    const startScreen = document.getElementById("start-screen");
+    const startButton = document.getElementById("start-button");
+
+    function updateScoreboard() {
+      scoreboard.textContent = `Pontos: ${points} | Recursos: R$ ${resources.toLocaleString('pt-BR')}`;
+      resourcesDisplay.textContent = `R$ ${resources.toLocaleString('pt-BR')}`;
+      pointsDisplay.textContent = points;
+    }
+
+    function message(text) {
+      messageEl.style.opacity = 0;
+      setTimeout(() => {
+        messageEl.textContent = text;
+        messageEl.style.opacity = 1;
+      }, 200);
+    }
+
+    function clearMessage() {
+      messageEl.style.opacity = 0;
+      setTimeout(() => {
+        messageEl.textContent = "";
+      }, 300);
+    }
+
+    function showQuestion() {
+      inDecisionPhase = false;
+      decisionSection.style.display = "none";
+      clearMessage();
+
+      if (currentQuestionIndex >= questions.length) {
+        showFinalMessage();
+        return;
+      }
+
+      const interval = decisionIntervals[decisionIntervalIndex % decisionIntervals.length];
+      if (currentQuestionIndex > 0 && currentQuestionIndex % interval === 0) {
+        decisionIntervalIndex++;
+        showDecision();
+        return;
+      }
+
+      const q = questions[currentQuestionIndex];
+      questionEl.textContent = q.question;
+      optionsContainer.innerHTML = "";
+
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.textContent = `${String.fromCharCode(97 + idx)}) ${opt.text}`;
+        btn.setAttribute("aria-label", `Opção ${String.fromCharCode(97 + idx)}: ${opt.text}`);
+        btn.addEventListener("click", () => handleAnswer(btn, opt.correct));
+        optionsContainer.appendChild(btn);
+      });
+
+      animateProgressBar(0);
+    }
+
+    function handleAnswer(button, isCorrect) {
+      Array.from(optionsContainer.children).forEach(btn => btn.disabled = true);
+
+      if (isCorrect) {
+        button.classList.add("correct");
+        points += 10;
+        resources += 50000;
+        message("Resposta correta! Você ganhou 10 pontos e R$ 50.000.");
+      } else {
+        button.classList.add("wrong");
+        message("Resposta incorreta. Tente a próxima.");
+      }
+      updateScoreboard();
+
+      animateProgressBar(100);
+
+      setTimeout(() => {
+        currentQuestionIndex++;
+        showQuestion();
+      }, 2500);
+    }
+
+    function showDecision() {
+      inDecisionPhase = true;
+      questionEl.textContent = "";
+      optionsContainer.innerHTML = "";
+      decisionSection.style.display = "block";
+      clearMessage();
+      updateScoreboard();
+
+      decisionOptionsContainer.innerHTML = "";
+
+      const availableDecisions = allDecisions.filter(d => !chosenDecisionIds.has(d.id));
+
+      if (availableDecisions.length === 0) {
+        message("Todas as decisões estratégicas já foram tomadas.");
+        setTimeout(() => {
+          decisionSection.style.display = "none";
+          showQuestion();
+        }, 2500);
+        return;
+      }
+
+      availableDecisions.forEach((decision, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "decision-btn";
+        btn.textContent = decision.text;
+        btn.disabled = decision.cost > resources;
+        btn.setAttribute("aria-label", `Decisão ${idx + 1}: ${decision.text}${btn.disabled ? ", não disponível por falta de recursos" : ""}`);
+        btn.addEventListener("click", () => handleDecision(decision));
+        decisionOptionsContainer.appendChild(btn);
+      });
+    }
+
+    function handleDecision(decision) {
+      if (decision.cost > resources) {
+        message("Recursos insuficientes para essa decisão.");
+        return;
+      }
+
+      decision.effect();
+      chosenDecisionIds.add(decision.id);
+      updateScoreboard();
+
+      decisionSection.style.display = "none";
+      showQuestion();
+    }
+
+    function showFinalMessage() {
+      questionEl.textContent = "Parabéns! Você concluiu o desafio de administração sustentável.";
+      optionsContainer.innerHTML = "";
+      decisionSection.style.display = "none";
+      message(`Pontuação final: ${points} pontos | Recursos finais: R$ ${resources.toLocaleString('pt-BR')}. Obrigado por jogar! Atualize a página para jogar novamente.`);
+      progressBar.style.width = "0%";
+    }
+
+    function animateProgressBar(percent) {
+      progressBar.style.width = percent + "%";
+    }
+
+    startButton.addEventListener('click', () => {
+      startScreen.classList.add('hidden');
+      setTimeout(() => {
+        startScreen.style.display = 'none';
+        gameContainer.classList.add('visible');
+        gameContainer.focus();
+        updateScoreboard();
+        showQuestion();
+      }, 600);
+    });
+
+  })();
+</script>
+</body>
+</html>
